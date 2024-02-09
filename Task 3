@@ -1,0 +1,43 @@
+import ntpath as np
+from s2clientprotocol import cosine_similarity
+
+# Sample user-item matrix (rows represent users, columns represent items)
+# 1: Liked, 0: Not liked
+user_item_matrix = np.array([
+    [1, 0, 1, 1, 0],
+    [0, 1, 1, 0, 1],
+    [1, 1, 0, 1, 0],
+    [0, 1, 0, 1, 1],
+    [1, 0, 1, 0, 1]
+])
+
+# Function to calculate cosine similarity between users
+def calculate_similarity(matrix):
+    similarity_matrix = cosine_similarity(matrix)
+    np.fill_diagonal(similarity_matrix, 0)  # Set diagonal values to 0 to avoid self-similarity
+    return similarity_matrix
+
+# Function to make recommendations for a user
+def recommend_items(user_id, matrix, similarity_matrix, num_recommendations=1):
+    user_preferences = matrix[user_id]
+    weighted_preferences = np.dot(similarity_matrix[user_id], matrix)
+    
+    # Exclude items already liked by the user
+    unliked_items = np.where(user_preferences == 0)[0]
+    
+    # Sort unliked items by weighted preference in descending order
+    sorted_indices = np.argsort(weighted_preferences[unliked_items])[::-1]
+    
+    # Get the top N recommendations
+    recommendations = unliked_items[sorted_indices[:num_recommendations]]
+    
+    return recommendations
+
+# Calculate user similarity
+user_similarity = calculate_similarity(user_item_matrix)
+
+# Example: Recommend items for user 0
+user_id_to_recommend = 0
+recommended_items = recommend_items(user_id_to_recommend, user_item_matrix, user_similarity, num_recommendations=2)
+
+print(f"Recommendations for User {user_id_to_recommend}: {recommended_items}")
